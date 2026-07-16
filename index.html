@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SleekImage // Minimalist Image Studio</title>
+    
+    <!-- Tailwind CSS for modern layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Cropper.js for visual cropping -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+    
+    <!-- jsPDF for PDF compilation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Configure minimalist white-black details for Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'Courier New', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Base Styling for Custom Range Sliders & Cropper customization -->
+    <style>
+        /* Modern minimalist range input styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            background: #e5e5e5;
+            height: 2px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            background-color: #000000;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            margin-top: -5px;
+        }
+        /* Custom minimalist Cropper styles */
+        .cropper-view-box {
+            outline: 1px solid #000;
+            outline-color: rgba(0, 0, 0, 0.75);
+        }
+        .cropper-line, .cropper-point {
+            background-color: #000;
+        }
+    </style>
+</head>
+<body class="bg-white text-black min-h-screen flex flex-col selection:bg-neutral-900 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-neutral-200">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 bg-black rounded-none"></span>
+                <h1 class="text-sm font-bold tracking-widest uppercase font-mono">SleekImage // Studio</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-[10px] font-mono tracking-wider uppercase text-neutral-400">Offline Enabled</span>
+                <button id="pwa-install-btn" class="hidden text-[10px] font-mono tracking-wider uppercase border border-black px-2.5 py-1 hover:bg-black hover:text-white transition duration-200">Install</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-6xl w-full mx-auto p-4 flex-grow flex flex-col gap-6">
+        
+        <!-- Tab Controls -->
+        <div class="flex border-b border-neutral-200 gap-6">
+            <button id="tab-single-btn" onclick="switchTab('single')" class="pb-2 text-xs font-mono font-bold tracking-wider uppercase border-b-2 border-black transition-all">
+                [ 01 / Image Studio ]
+            </button>
+            <button id="tab-batch-btn" onclick="switchTab('batch')" class="pb-2 text-xs font-mono tracking-wider uppercase text-neutral-400 border-b-2 border-transparent hover:text-black transition-all">
+                [ 02 / Batch PDF Compiler ]
+            </button>
+        </div>
+
+        <!-- ================= TAB 1: SINGLE IMAGE STUDIO ================= -->
+        <section id="tab-single" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Workspace: Interactive Crop/Preview Box -->
+            <div class="lg:col-span-7 flex flex-col gap-4">
+                <div class="border border-neutral-200 p-4 min-h-[350px] lg:min-h-[480px] flex flex-col items-center justify-center bg-neutral-50 relative group">
+                    
+                    <!-- Upload Dropzone -->
+                    <label id="dropzone-label" for="single-image-input" class="absolute inset-0 flex flex-col items-center justify-center cursor-pointer p-6 text-center z-10 bg-neutral-50 hover:bg-neutral-100/50 transition duration-200">
+                        <input type="file" id="single-image-input" accept="image/*" class="hidden" onchange="loadSingleImage(event)">
+                        <svg class="w-8 h-8 text-neutral-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
+                        <p class="text-xs font-mono uppercase tracking-wider text-neutral-500">Drop your file here, or browse</p>
+                    </label>
+
+                    <!-- Active Image Cropper Element Container -->
+                    <div id="cropper-container" class="hidden w-full h-full max-h-[450px] flex justify-center items-center z-20">
+                        <img id="image-workspace" src="" alt="Workspace" class="max-h-[420px] max-w-full block">
+                    </div>
+                </div>
+
+                <!-- Aspect Ratio Presets (Only visible when image is loaded) -->
+                <div id="aspect-ratio-controls" class="hidden flex flex-wrap gap-2 items-center">
+                    <span class="text-[10px] font-mono uppercase text-neutral-400 mr-2">Crop Ratio:</span>
+                    <button onclick="setCropRatio(NaN)" class="px-2 py-1 text-[10px] font-mono border border-black hover:bg-black hover:text-white transition">Free</button>
+                    <button onclick="setCropRatio(1)" class="px-2 py-1 text-[10px] font-mono border border-neutral-200 hover:border-black transition">1:1</button>
+                    <button onclick="setCropRatio(16/9)" class="px-2 py-1 text-[10px] font-mono border border-neutral-200 hover:border-black transition">16:9</button>
+                    <button onclick="setCropRatio(4/3)" class="px-2 py-1 text-[10px] font-mono border border-neutral-200 hover:border-black transition">4:3</button>
+                    <button onclick="setCropRatio(2/3)" class="px-2 py-1 text-[10px] font-mono border border-neutral-200 hover:border-black transition">2:3</button>
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Controls -->
+            <div class="lg:col-span-5 flex flex-col gap-6">
+                
+                <!-- Quick Settings Block -->
+                <div class="border border-neutral-200 p-6 flex flex-col gap-5">
+                    <div class="flex items-center justify-between border-b border-neutral-100 pb-2">
+                        <h3 class="text-xs font-mono font-bold uppercase tracking-widest">Image Parameters</h3>
+                        <button onclick="resetSingleWorkspace()" class="text-[10px] font-mono text-neutral-400 hover:text-black">Reset</button>
+                    </div>
+
+                    <!-- Target Dimensions Form -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <label class="text-[10px] font-mono uppercase tracking-wider text-neutral-500">Output Dimensions</label>
+                            <label class="inline-flex items-center gap-1.5 cursor-pointer text-[10px] font-mono text-neutral-400 select-none">
+                                <input type="checkbox" id="lock-aspect-ratio" checked class="rounded border-neutral-300 text-black focus:ring-0">
+                                Lock Aspect
+                            </label>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-[10px] font-mono text-neutral-400">Width (px)</span>
+                                <input type="number" id="target-width" oninput="recalcRatio('width')" placeholder="Auto" class="w-full border-b border-neutral-300 focus:border-black py-1 text-sm focus:outline-none font-mono">
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-mono text-neutral-400">Height (px)</span>
+                                <input type="number" id="target-height" oninput="recalcRatio('height')" placeholder="Auto" class="w-full border-b border-neutral-300 focus:border-black py-1 text-sm focus:outline-none font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Format Selection -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-mono uppercase tracking-wider text-neutral-500 block">Export Format</label>
+                        <select id="export-format" onchange="onFormatChange()" class="w-full border-b border-neutral-300 focus:border-black py-1 text-sm focus:outline-none font-mono bg-white">
+                            <option value="jpeg">JPEG (Standard Compressed)</option>
+                            <option value="png">PNG (Lossless / Transparent)</option>
+                            <option value="webp">WEBP (Highly Optimized)</option>
+                        </select>
+                    </div>
+
+                    <!-- Compression Settings -->
+                    <div class="space-y-3">
+                        <div class="flex border-b border-neutral-100 pb-1">
+                            <button id="engine-quality-btn" onclick="switchEngine('quality')" class="text-[10px] font-mono font-bold uppercase tracking-wider mr-4 text-black border-b-2 border-black">Quality Range</button>
+                            <button id="engine-size-btn" onclick="switchEngine('size')" class="text-[10px] font-mono uppercase tracking-wider text-neutral-400">Target Size (KB)</button>
+                        </div>
+
+                        <!-- Manual quality input -->
+                        <div id="engine-quality-wrapper" class="space-y-2">
+                            <div class="flex justify-between text-[10px] font-mono text-neutral-400">
+                                <span>Adjust Value</span>
+                                <span id="quality-display">85%</span>
+                            </div>
+                            <input type="range" id="quality-slider" min="10" max="100" value="85" oninput="document.getElementById('quality-display').innerText = this.value + '%'" class="w-full">
+                        </div>
+
+                        <!-- Size Input -->
+                        <div id="engine-size-wrapper" class="hidden space-y-2">
+                            <div class="flex justify-between text-[10px] font-mono text-neutral-400">
+                                <span>Input Maximum Target Size</span>
+                            </div>
+                            <div class="relative">
+                                <input type="number" id="target-kb" placeholder="e.g. 200" class="w-full border-b border-neutral-300 focus:border-black py-1 text-sm focus:outline-none font-mono">
+                                <span class="absolute right-0 bottom-1 text-[10px] font-mono text-neutral-400">KB</span>
+                            </div>
+                            <p id="png-warn" class="hidden text-[9px] font-mono text-neutral-400 leading-normal">
+                                * PNG compression is lossless. The system will dynamically scale down pixel resolution to meet your target KB file size.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Process & Export Action button -->
+                    <button onclick="processAndExportImage()" class="w-full bg-black hover:bg-neutral-800 text-white font-mono text-xs uppercase tracking-widest py-3 transition duration-200 mt-2">
+                        Generate & Download
+                    </button>
+                </div>
+
+                <!-- Processing Stats Output card -->
+                <div id="stats-card" class="hidden border border-neutral-200 p-4 font-mono text-xs space-y-1 bg-neutral-50">
+                    <p class="text-[10px] uppercase tracking-wider text-neutral-400 mb-2 font-bold">Execution Report</p>
+                    <div class="flex justify-between">
+                        <span class="text-neutral-500">Original File Size:</span>
+                        <span id="stat-original">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-neutral-500">Exported File Size:</span>
+                        <span id="stat-exported" class="font-bold">-</span>
+                    </div>
+                    <div class="flex justify-between border-t border-neutral-200 pt-1 mt-1 font-bold">
+                        <span class="text-neutral-500">Savings Ratio:</span>
+                        <span id="stat-ratio">-</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: BATCH PDF COMPILER ================= -->
+        <section id="tab-batch" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Workspace: Queue List -->
+            <div class="lg:col-span-7 flex flex-col gap-4">
+                <div class="border border-neutral-200 p-4 min-h-[350px] lg:min-h-[480px] flex flex-col bg-neutral-50 relative">
+                    
+                    <!-- Multiple file Dropzone -->
+                    <label id="pdf-dropzone" for="batch-pdf-input" class="border-2 border-dashed border-neutral-300 hover:border-black bg-white p-6 text-center cursor-pointer flex flex-col items-center justify-center gap-2 transition duration-200 mb-4">
+                        <input type="file" id="batch-pdf-input" accept="image/*" multiple class="hidden" onchange="addImagesToPdfQueue(event)">
+                        <svg class="w-6 h-6 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
+                        <p class="text-xs font-mono uppercase tracking-wider text-neutral-500">Upload multiple image pages</p>
+                    </label>
+
+                    <!-- PDF Queue Display Container -->
+                    <div id="pdf-queue-container" class="space-y-2 flex-grow overflow-y-auto max-h-[350px] pr-1">
+                        <div id="pdf-empty-state" class="text-center py-20 text-neutral-400 font-mono text-xs">
+                            No files added to the PDF queue.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Configuration parameters -->
+            <div class="lg:col-span-5 flex flex-col gap-6">
+                <div class="border border-neutral-200 p-6 flex flex-col gap-5">
+                    <div class="flex items-center justify-between border-b border-neutral-100 pb-2">
+                        <h3 class="text-xs font-mono font-bold uppercase tracking-widest">Document Settings</h3>
+                        <button onclick="clearPdfQueue()" class="text-[10px] font-mono text-red-500 hover:text-red-700">Clear</button>
+                    </div>
+
+                    <!-- Layout selection -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-mono uppercase tracking-wider text-neutral-500 block">Paper Size</label>
+                        <select id="pdf-size" class="w-full border-b border-neutral-300 focus:border-black py-1 text-sm focus:outline-none font-mono bg-white">
+                            <option value="a4">A4 Standard</option>
+                            <option value="letter">US Letter</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-mono uppercase tracking-wider text-neutral-500 block">Orientation</label>
+                        <select id="pdf-orientation" class="w-full border-b border-neutral-300 focus:border-black py-1 text-sm focus:outline-none font-mono bg-white">
+                            <option value="p">Portrait</option>
+                            <option value="l">Landscape</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-mono uppercase tracking-wider text-neutral-500 block">Marginal Borders</label>
+                        <select id="pdf-margins" class="w-full border-b border-neutral-300 focus:border-black py-1 text-sm focus:outline-none font-mono bg-white">
+                            <option value="0">Zero Margins (Full Bleed)</option>
+                            <option value="10">Small (10mm)</option>
+                            <option value="20">Large (20mm)</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-mono uppercase tracking-wider text-neutral-500 block">Filename</label>
+                        <input type="text" id="pdf-filename" value="compiled_document" class="w-full border-b border-neutral-300 focus:border-black py-1 text-sm focus:outline-none font-mono">
+                    </div>
+
+                    <button onclick="compileAndDownloadPDF()" class="w-full bg-black hover:bg-neutral-800 text-white font-mono text-xs uppercase tracking-widest py-3 transition duration-200 mt-2">
+                        Compile PDF Document
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="border-t border-neutral-200 py-6 text-center text-[10px] font-mono uppercase tracking-widest text-neutral-400 flex flex-col gap-1 items-center">
+        <p>© SleekImage. Local client sandboxed processor. Your files are never uploaded.</p>
+    </footer>
+
+    <!-- Service worker & Logic Script -->
+    <script>
+        // Tab switching utility
+        function switchTab(tabId) {
+            const tabs = ['single', 'batch'];
+            tabs.forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}-btn`).className = "pb-2 text-xs font-mono tracking-wider uppercase text-neutral-400 border-b-2 border-transparent hover:text-black transition-all";
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}-btn`).className = "pb-2 text-xs font-mono font-bold tracking-wider uppercase border-b-2 border-black transition-all";
+        }
+
+        // Shared formatting helper
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // ================= TAB 1: STUDIO CONTROLLERS =================
+        let cropperInstance = null;
+        let loadedImageFile = null;
+        let imageDimensions = { width: 0, height: 0 };
+        let activeEngine = 'quality'; // Choices: quality | size
+
+        function onFormatChange() {
+            const format = document.getElementById('export-format').value;
+            const pngWarn = document.getElementById('png-warn');
+            if (format === 'png' && activeEngine === 'size') {
+                pngWarn.classList.remove('hidden');
+            } else {
+                pngWarn.classList.add('hidden');
+            }
+        }
+
+        function switchEngine(engine) {
+            activeEngine = engine;
+            const qBtn = document.getElementById('engine-quality-btn');
+            const sBtn = document.getElementById('engine-size-btn');
+            const qWrapper = document.getElementById('engine-quality-wrapper');
+            const sWrapper = document.getElementById('engine-size-wrapper');
+
+            if (engine === 'quality') {
+                qBtn.className = "text-[10px] font-mono font-bold uppercase tracking-wider mr-4 text-black border-b-2 border-black";
+                sBtn.className = "text-[10px] font-mono uppercase tracking-wider text-neutral-400";
+                qWrapper.classList.remove('hidden');
+                sWrapper.classList.add('hidden');
+            } else {
+                sBtn.className = "text-[10px] font-mono font-bold uppercase tracking-wider text-black border-b-2 border-black";
+                qBtn.className = "text-[10px] font-mono uppercase tracking-wider text-neutral-400 mr-4";
+                sWrapper.classList.remove('hidden');
+                qWrapper.classList.add('hidden');
+            }
+            onFormatChange();
+        }
+
+        function loadSingleImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            loadedImageFile = file;
+            document.getElementById('dropzone-label').classList.add('hidden');
+            document.getElementById('cropper-container').classList.remove('hidden');
+            document.getElementById('aspect-ratio-controls').classList.remove('hidden');
+
+            const workspaceImg = document.getElementById('image-workspace');
+            workspaceImg.src = URL.createObjectURL(file);
+
+            // Destroy existing cropper if active
+            if (cropperInstance) {
+                cropperInstance.destroy();
+            }
+
+            // Init Cropper instance
+            cropperInstance = new Cropper(workspaceImg, {
+                aspectRatio: NaN,
+                viewMode: 1,
+                autoCropArea: 1,
+                responsive: true,
+                restore: false,
+                checkCrossOrigin: false,
+                crop(e) {
+                    // Update Width/Height outputs dynamically as user crops
+                    document.getElementById('target-width').value = Math.round(e.detail.width);
+                    document.getElementById('target-height').value = Math.round(e.detail.height);
+                    imageDimensions.width = Math.round(e.detail.width);
+                    imageDimensions.height = Math.round(e.detail.height);
+                }
+            });
+        }
+
+        // Auto Aspect ratio lock calculations
+        function recalcRatio(changedField) {
+            const lock = document.getElementById('lock-aspect-ratio').checked;
+            if (!lock || !cropperInstance) return;
+
+            const wInput = document.getElementById('target-width');
+            const hInput = document.getElementById('target-height');
+            const ratio = imageDimensions.width / imageDimensions.height;
+
+            if (changedField === 'width') {
+                const wValue = parseFloat(wInput.value);
+                if (!isNaN(wValue)) {
+                    hInput.value = Math.round(wValue / ratio);
+                }
+            } else {
+                const hValue = parseFloat(hInput.value);
+                if (!isNaN(hValue)) {
+                    wInput.value = Math.round(hValue * ratio);
+                }
+            }
+        }
+
+        function setCropRatio(ratio) {
+            if (cropperInstance) {
+                cropperInstance.setAspectRatio(ratio);
+            }
+        }
+
+        function resetSingleWorkspace() {
+            if (cropperInstance) {
+                cropperInstance.destroy();
+                cropperInstance = null;
+            }
+            loadedImageFile = null;
+            document.getElementById('single-image-input').value = "";
+            document.getElementById('dropzone-label').classList.remove('hidden');
+            document.getElementById('cropper-container').classList.add('hidden');
+            document.getElementById('aspect-ratio-controls').classList.add('hidden');
+            document.getElementById('stats-card').classList.add('hidden');
+            document.getElementById('target-width').value = "";
+            document.getElementById('target-height').value = "";
+        }
+
+        // Core compilation pipeline
+        async function processAndExportImage() {
+            if (!loadedImageFile || !cropperInstance) {
+                alert("Please upload an image first.");
+                return;
+            }
+
+            // 1. Get Crop coordinates
+            const croppedCanvas = cropperInstance.getCroppedCanvas();
+
+            // 2. Adjust target dimensions (Resize)
+            const targetWidth = parseInt(document.getElementById('target-width').value) || croppedCanvas.width;
+            const targetHeight = parseInt(document.getElementById('target-height').value) || croppedCanvas.height;
+
+            let finalCanvas = croppedCanvas;
+            if (targetWidth !== croppedCanvas.width || targetHeight !== croppedCanvas.height) {
+                finalCanvas = document.createElement('canvas');
+                finalCanvas.width = targetWidth;
+                finalCanvas.height = targetHeight;
+                const ctx = finalCanvas.getContext('2d');
+                ctx.drawImage(croppedCanvas, 0, 0, targetWidth, targetHeight);
+            }
+
+            // 3. Export formats & compression engine rules
+            const format = document.getElementById('export-format').value;
+            let mimeType = `image/${format}`;
+            if (format === 'jpg') mimeType = 'image/jpeg';
+
+            let outputBlob = null;
+
+            if (activeEngine === 'quality') {
+                const qualityVal = parseFloat(document.getElementById('quality-slider').value) / 100;
+                outputBlob = await new Promise(res => finalCanvas.toBlob(res, mimeType, format === 'png' ? undefined : qualityVal));
+            } else {
+                // Compression target size limit
+                const targetKB = parseFloat(document.getElementById('target-kb').value);
+                if (!targetKB || isNaN(targetKB)) {
+                    alert("Please enter a valid target size (KB).");
+                    return;
+                }
+                const targetBytes = targetKB * 1024;
+
+                if (format !== 'png') {
+                    // Binary search algorithm adjusting lossy quality values
+                    let min = 0.01, max = 0.99;
+                    let bestBlob = null;
+                    for (let i = 0; i < 9; i++) {
+                        const midQuality = (min + max) / 2;
+                        const tempBlob = await new Promise(res => finalCanvas.toBlob(res, mimeType, midQuality));
+                        if (!tempBlob) break;
+
+                        if (tempBlob.size > targetBytes) {
+                            max = midQuality;
+                        } else {
+                            min = midQuality;
+                            bestBlob = tempBlob;
+                        }
+                    }
+                    outputBlob = bestBlob || await new Promise(res => finalCanvas.toBlob(res, mimeType, 0.05));
+                } else {
+                    // PNG file target scale adaptation (Since PNG has no lossy quality parameter)
+                    let scaleMin = 0.05, scaleMax = 1.0;
+                    let bestBlob = null;
+                    for (let i = 0; i < 7; i++) {
+                        const testScale = (scaleMin + scaleMax) / 2;
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = Math.round(targetWidth * testScale);
+                        tempCanvas.height = Math.round(targetHeight * testScale);
+                        const tempCtx = tempCanvas.getContext('2d');
+                        tempCtx.drawImage(finalCanvas, 0, 0, tempCanvas.width, tempCanvas.height);
+
+                        const tempBlob = await new Promise(res => tempCanvas.toBlob(res, 'image/png'));
+                        if (!tempBlob) break;
+
+                        if (tempBlob.size > targetBytes) {
+                            scaleMax = testScale;
+                        } else {
+                            scaleMin = testScale;
+                            bestBlob = tempBlob;
+                        }
+                    }
+                    outputBlob = bestBlob || await new Promise(res => finalCanvas.toBlob(res, 'image/png'));
+                }
+            }
+
+            if (outputBlob) {
+                // Display statistics
+                document.getElementById('stats-card').classList.remove('hidden');
+                document.getElementById('stat-original').innerText = formatBytes(loadedImageFile.size);
+                document.getElementById('stat-exported').innerText = formatBytes(outputBlob.size);
+                const savings = ((loadedImageFile.size - outputBlob.size) / loadedImageFile.size) * 100;
+                document.getElementById('stat-ratio').innerText = savings > 0 ? `-${savings.toFixed(1)}%` : `+${Math.abs(savings).toFixed(1)}%`;
+
+                // Initiate instant browser download trigger
+                const blobURL = URL.createObjectURL(outputBlob);
+                const link = document.createElement('a');
+                link.href = blobURL;
+                link.download = `sleek_${Date.now()}.${format}`;
+                link.click();
+            }
+        }
+
+        // ================= TAB 2: BATCH COMPILER CONTROLLERS =================
+        let pdfQueue = [];
+
+        function addImagesToPdfQueue(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            files.forEach(file => {
+                pdfQueue.push({
+                    id: Date.now() + Math.random().toString(36).substring(2, 7),
+                    file: file,
+                    name: file.name,
+                    size: file.size
+                });
+            });
+
+            renderPdfQueue();
+            document.getElementById('batch-pdf-input').value = ""; // Clear input selection
+        }
+
+        function renderPdfQueue() {
+            const container = document.getElementById('pdf-queue-container');
+            const emptyState = document.getElementById('pdf-empty-state');
+
+            if (pdfQueue.length === 0) {
+                emptyState.classList.remove('hidden');
+                container.innerHTML = '';
+                container.appendChild(emptyState);
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            container.innerHTML = '';
+
+            pdfQueue.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between border border-neutral-200 bg-white p-3 font-mono text-xs";
+                row.innerHTML = `
+                    <div class="flex items-center gap-3 truncate">
+                        <span class="text-neutral-400 text-[10px]">${index + 1}</span>
+                        <div class="truncate">
+                            <p class="font-bold truncate text-neutral-800 max-w-[180px] md:max-w-xs">${item.name}</p>
+                            <p class="text-[10px] text-neutral-400">${formatBytes(item.size)}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                        <button onclick="shiftPdfQueue(${index}, -1)" class="p-1 border border-neutral-200 hover:border-black text-[10px] bg-white">▲</button>
+                        <button onclick="shiftPdfQueue(${index}, 1)" class="p-1 border border-neutral-200 hover:border-black text-[10px] bg-white">▼</button>
+                        <button onclick="removePdfFromQueue('${item.id}')" class="p-1 border border-neutral-200 hover:border-red-500 hover:text-red-500 text-[10px] bg-white ml-2">DELETE</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function shiftPdfQueue(index, dir) {
+            const targetIndex = index + dir;
+            if (targetIndex < 0 || targetIndex >= pdfQueue.length) return;
+
+            const temp = pdfQueue[index];
+            pdfQueue[index] = pdfQueue[targetIndex];
+            pdfQueue[targetIndex] = temp;
+            renderPdfQueue();
+        }
+
+        function removePdfFromQueue(id) {
+            pdfQueue = pdfQueue.filter(item => item.id !== id);
+            renderPdfQueue();
+        }
+
+        function clearPdfQueue() {
+            pdfQueue = [];
+            renderPdfQueue();
+        }
+
+        async function compileAndDownloadPDF() {
+            if (pdfQueue.length === 0) {
+                alert("Queue empty. Add images to process.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const size = document.getElementById('pdf-size').value;
+            const orientation = document.getElementById('pdf-orientation').value;
+            const margins = parseInt(document.getElementById('pdf-margins').value);
+
+            const doc = new jsPDF({
+                orientation: orientation,
+                unit: 'mm',
+                format: size
+            });
+
+            const pageW = doc.internal.pageSize.getWidth();
+            const pageH = doc.internal.pageSize.getHeight();
+            const printW = pageW - (margins * 2);
+            const printH = pageH - (margins * 2);
+
+            for (let i = 0; i < pdfQueue.length; i++) {
+                if (i > 0) doc.addPage();
+
+                const item = pdfQueue[i];
+                const imgData = await new Promise((resolve) => {
+                    const r = new FileReader();
+                    r.onload = (e) => resolve(e.target.result);
+                    r.readAsDataURL(item.file);
+                });
+
+                // Aspect ratio calculations
+                const tempImg = new Image();
+                await new Promise((resolve) => {
+                    tempImg.onload = resolve;
+                    tempImg.src = imgData;
+                });
+
+                const ratio = tempImg.width / tempImg.height;
+                let targetW = printW;
+                let targetH = printW / ratio;
+
+                if (targetH > printH) {
+                    targetH = printH;
+                    targetW = printH * ratio;
+                }
+
+                const xOffset = margins + (printW - targetW) / 2;
+                const yOffset = margins + (printH - targetH) / 2;
+
+                let ext = 'JPEG';
+                if (item.file.type === 'image/png') ext = 'PNG';
+                if (item.file.type === 'image/webp') ext = 'WEBP';
+
+                doc.addImage(imgData, ext, xOffset, yOffset, targetW, targetH);
+            }
+
+            const name = document.getElementById('pdf-filename').value || 'document';
+            doc.save(`${name}.pdf`);
+        }
+
+        // ================= PWA SETUP EMBED =================
+        let pwaPrompt;
+        const installBtn = document.getElementById('pwa-install-btn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            pwaPrompt = e;
+            installBtn.classList.remove('hidden');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (pwaPrompt) {
+                pwaPrompt.prompt();
+                const { outcome } = await pwaPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installBtn.classList.add('hidden');
+                }
+                pwaPrompt = null;
+            }
+        });
+    </script>
+</body>
+                          </html>
