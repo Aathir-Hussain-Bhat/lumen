@@ -463,13 +463,18 @@
                     </div>
                     <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 md:p-8 flex flex-col items-center">
                         <div class="max-w-md w-full bg-ivory border border-beige rounded-2xl shadow-xl overflow-hidden">
-                            <div class="bg-forest p-6 flex flex-col items-center relative">
+                            <div id="friend-header-bg" class="bg-forest p-6 flex flex-col items-center relative">
                                 <div class="absolute top-4 right-4 border-2 border-dashed border-gold/40 text-gold/80 p-2 rounded-sm text-center rotate-[-5deg]"><span class="text-[8px] block font-bold tracking-widest">FRIEND</span></div>
-                                <div class="mb-4 p-1 bg-gold rounded-full shadow-lg">
+                                <div id="friend-avatar-ring" class="mb-4 p-1 bg-gold rounded-full shadow-lg">
                                     <img id="friend-profile-img" class="h-24 w-24 rounded-full object-cover hidden" src="" alt="Avatar">
                                     <div id="friend-profile-fallback" class="h-24 w-24 rounded-full bg-ivory text-forest flex items-center justify-center font-serif font-bold text-4xl">F</div>
                                 </div>
-                                <h4 id="friend-display-name" class="font-serif text-3xl italic text-ivory font-semibold">Companion Name</h4>
+                                <div class="flex items-center gap-2">
+                                    <h4 id="friend-display-name" class="font-serif text-3xl italic text-ivory font-semibold">Companion Name</h4>
+                                    <span id="creator-badge-friend" class="hidden px-2 py-0.5 bg-gold text-forest text-[10px] font-bold rounded-full flex items-center gap-1">
+                                        <i data-lucide="award" class="h-3 w-3"></i> Creator
+                                    </span>
+                                </div>
                                 <p id="friend-username" class="text-sm text-gold tracking-wide">@username</p>
                             </div>
                             <div class="p-6 space-y-4">
@@ -715,7 +720,7 @@
         lucide.createIcons();
 
         function isCreator(user) {
-            return user?.email === CREATOR_EMAIL || user?.user_metadata?.username === CREATOR_USERNAME;
+            return user?.email?.toLowerCase() === CREATOR_EMAIL || user?.user_metadata?.username?.toLowerCase() === CREATOR_USERNAME;
         }
 
         function showAppConfirm(title, message) {
@@ -1205,6 +1210,12 @@
                     profile = letter.recipient;
                     displayName = profile?.display_name || 'Future Self';
                 }
+
+                const isCreatorLetter = profile?.username?.toLowerCase() === CREATOR_USERNAME;
+                if (isCreatorLetter) {
+                    card.classList.add('border-gold/60', 'shadow-md');
+                }
+
                 const avatarHtml = profile?.avatar_url 
                     ? `<img src="${profile.avatar_url}" class="h-8 w-8 rounded-full object-cover border border-beige flex-shrink-0 mr-3">` 
                     : `<div class="h-8 w-8 rounded-full bg-beige flex-shrink-0 flex items-center justify-center font-bold text-forest text-xs mr-3 border border-beige">${displayName.charAt(0).toUpperCase()}</div>`;
@@ -1223,7 +1234,8 @@
                 }
                 
                 const nameLabel = currentFolder === 'delivered' ? `From: ${displayName}` : `To: ${displayName}`;
-                card.innerHTML = `<div class="flex items-center overflow-hidden min-w-0 mr-2">${avatarHtml}${dot}<div class="min-w-0"><h4 class="font-serif text-base font-semibold text-forest group-hover:text-gold transition-colors truncate">${letter.subject || '(Untitled Scroll)'}</h4><p class="text-[11px] text-ink/50 mt-0.5 truncate">${nameLabel}</p></div></div><div class="text-right flex-shrink-0">${metaContent}</div>`;
+                const creatorTagHtml = isCreatorLetter ? '<span class="ml-1 px-1 py-0.5 bg-gold/20 text-gold text-[9px] font-bold rounded">CREATOR</span>' : '';
+                card.innerHTML = `<div class="flex items-center overflow-hidden min-w-0 mr-2">${avatarHtml}${dot}<div class="min-w-0"><h4 class="font-serif text-base font-semibold text-forest group-hover:text-gold transition-colors truncate">${letter.subject || '(Untitled Scroll)'}</h4><p class="text-[11px] text-ink/50 mt-0.5 truncate">${nameLabel} ${creatorTagHtml}</p></div></div><div class="text-right flex-shrink-0">${metaContent}</div>`;
                 
                 if (isScheduledTransit && currentFolder === 'delivered') card.classList.add('opacity-70', 'border-dashed', 'border-gold');
                 
@@ -1352,7 +1364,7 @@
                 const postReplies = repliesMap[post.id] || [];
                 const isLiked = postLikes.includes(currentUser.id);
                 const isPinned = pinnedIds.has(post.id);
-                const isCreatorPost = profile.username === CREATOR_USERNAME;
+                const isCreatorPost = profile.username?.toLowerCase() === CREATOR_USERNAME;
 
                 const repliesHtml = postReplies.map(r => {
                     const rProfile = profileMap[r.user_id] || {};
@@ -2420,18 +2432,33 @@
             if (profile.avatar_url) { img.src = profile.avatar_url; img.classList.remove('hidden'); fallback.classList.add('hidden'); } 
             else { img.classList.add('hidden'); fallback.classList.remove('hidden'); fallback.textContent = (profile.display_name || 'F').charAt(0).toUpperCase(); }
 
-            const actionBtn = document.getElementById('btn-friend-action');
-            actionBtn.classList.remove('hidden', 'bg-beige', 'text-ink/40', 'cursor-not-allowed');
-            actionBtn.classList.add('bg-forest', 'hover:bg-gold', 'hover:text-forest');
-            actionBtn.disabled = false;
+            // Creator Theme Logic for Friend Profile
+            const isCreatorProfile = profile.username?.toLowerCase() === CREATOR_USERNAME;
+            const friendHeader = document.getElementById('friend-header-bg');
+            const friendAvatarRing = document.getElementById('friend-avatar-ring');
+            const friendCreatorBadge = document.getElementById('creator-badge-friend');
 
-            // Check if friends
-            const { data: friendship } = await supabase.from('friendships')
-                .select('*').or(`and(user_id.eq.${currentUser.id},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${currentUser.id})`).limit(1).single();
+            if (isCreatorProfile) {
+                friendHeader.classList.remove('bg-forest');
+                friendHeader.classList.add('bg-gradient-to-r', 'from-amber-700', 'to-yellow-600');
+                friendAvatarRing.classList.add('creator-glow');
+                friendCreatorBadge.classList.remove('hidden');
+            } else {
+                friendHeader.classList.add('bg-forest');
+                friendHeader.classList.remove('bg-gradient-to-r', 'from-amber-700', 'to-yellow-600');
+                friendAvatarRing.classList.remove('creator-glow');
+                friendCreatorBadge.classList.add('hidden');
+            }
+
+            const actionBtn = document.getElementById('btn-friend-action');
             
-            if (friendship) {
-                actionBtn.querySelector('i').setAttribute('data-lucide', 'feather');
-                document.getElementById('friend-action-text').textContent = 'Address a Letter';
+            // Accurately check if friends using the user_friends view
+            const { data: isFriend } = await supabase.from('user_friends').select('friend_id').eq('friend_id', userId).maybeSingle();
+            
+            if (isFriend) {
+                actionBtn.className = "w-full bg-forest text-ivory text-xs py-3 rounded-lg font-semibold hover:bg-gold hover:text-forest transition-all flex items-center justify-center space-x-2 shadow-sm";
+                actionBtn.disabled = false;
+                actionBtn.innerHTML = `<i data-lucide="feather" class="h-4 w-4"></i><span id="friend-action-text">Address a Letter</span>`;
                 actionBtn.onclick = () => {
                     activeDraftId = null; pendingPostcardUrl = null; routeTo('view-composer');
                     document.getElementById('recipient-id').value = userId;
@@ -2442,27 +2469,27 @@
             } else {
                 // Check if request already sent/received
                 const { data: req } = await supabase.from('friend_requests')
-                    .select('*').or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${currentUser.id})`).limit(1).single();
+                    .select('*').or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${currentUser.id})`).eq('status', 'pending').maybeSingle();
                 
                 if (req) {
                     if (req.sender_id === currentUser.id) {
-                        actionBtn.classList.add('bg-beige', 'text-ink/40', 'cursor-not-allowed');
-                        actionBtn.classList.remove('bg-forest', 'hover:bg-gold', 'hover:text-forest');
+                        actionBtn.className = "w-full bg-beige text-ink/40 text-xs py-3 rounded-lg font-semibold cursor-not-allowed flex items-center justify-center space-x-2 shadow-sm";
                         actionBtn.disabled = true;
-                        actionBtn.querySelector('i').setAttribute('data-lucide', 'clock');
-                        document.getElementById('friend-action-text').textContent = 'Request Pending';
+                        actionBtn.innerHTML = `<i data-lucide="clock" class="h-4 w-4"></i><span id="friend-action-text">Request Pending</span>`;
                         actionBtn.onclick = null;
                     } else {
-                        actionBtn.querySelector('i').setAttribute('data-lucide', 'user-check');
-                        document.getElementById('friend-action-text').textContent = 'Accept Request';
+                        actionBtn.className = "w-full bg-forest text-ivory text-xs py-3 rounded-lg font-semibold hover:bg-gold hover:text-forest transition-all flex items-center justify-center space-x-2 shadow-sm";
+                        actionBtn.disabled = false;
+                        actionBtn.innerHTML = `<i data-lucide="user-check" class="h-4 w-4"></i><span id="friend-action-text">Accept Request</span>`;
                         actionBtn.onclick = async () => {
                             await supabase.from('friend_requests').update({ status: 'accepted' }).eq('id', req.id);
                             viewUserProfile(userId); 
                         };
                     }
                 } else {
-                    actionBtn.querySelector('i').setAttribute('data-lucide', 'user-plus');
-                    document.getElementById('friend-action-text').textContent = 'Send Friend Request';
+                    actionBtn.className = "w-full bg-forest text-ivory text-xs py-3 rounded-lg font-semibold hover:bg-gold hover:text-forest transition-all flex items-center justify-center space-x-2 shadow-sm";
+                    actionBtn.disabled = false;
+                    actionBtn.innerHTML = `<i data-lucide="user-plus" class="h-4 w-4"></i><span id="friend-action-text">Send Friend Request</span>`;
                     actionBtn.onclick = async () => {
                         const { error } = await supabase.from('friend_requests').insert({ sender_id: currentUser.id, receiver_id: userId, status: 'pending' });
                         if (!error) viewUserProfile(userId);
@@ -2501,4 +2528,4 @@
         initAppSession();
     </script>
 </body>
-    </html>
+                            </html>
