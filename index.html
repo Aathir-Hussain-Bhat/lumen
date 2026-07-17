@@ -10,6 +10,8 @@
     <meta name="theme-color" content="#1F4D3A">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="./icon.svg">
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
 
     <!-- Design System Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -87,14 +89,14 @@
         #paper-canvas {
             background-color: #FFFDF8;
             background-image: linear-gradient(#e5e1da10 1px, transparent 1px);
-            background-size: 100% 32px; /* Ruled lines matching line-height */
+            background-size: 100% 32px;
             background-position: 0 15px;
             box-shadow: 0 4px 6px -1px rgba(58, 47, 40, 0.05), 0 10px 20px -5px rgba(58, 47, 40, 0.1);
             border: 1px solid #E5E1DA;
             position: relative;
         }
         #letter-body {
-            line-height: 32px; /* Match the ruled lines */
+            line-height: 32px;
             letter-spacing: 0.02em;
         }
     </style>
@@ -242,6 +244,18 @@
                     <h2 id="mailbox-title" class="font-serif text-lg font-semibold text-forest">Inbox</h2>
                     <span id="letter-count" class="text-[10px] font-semibold text-ink/40 uppercase tracking-wider">0 Letters</span>
                 </div>
+                
+                <!-- Atrium Composer (Hidden by default) -->
+                <div id="atrium-composer" class="hidden p-4 border-b border-beige bg-[#F8F6F2] flex-shrink-0">
+                    <textarea id="atrium-input" rows="3" class="w-full bg-ivory border border-beige rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-forest text-ink resize-none custom-scrollbar" placeholder="Share a brief thought, quote, or poem with the sanctuary..."></textarea>
+                    <div class="flex justify-between items-center mt-2">
+                        <span id="atrium-char-count" class="text-[10px] text-ink/40">0 / 200</span>
+                        <button id="btn-post-atrium" class="bg-forest text-ivory px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-forest/90 transition-all shadow-sm flex items-center gap-1">
+                            <i data-lucide="send" class="h-3 w-3"></i> Post
+                        </button>
+                    </div>
+                </div>
+
                 <div id="filter-search-container" class="hidden p-3 border-b border-beige bg-[#F8F6F2] flex-shrink-0">
                     <div class="relative flex items-center">
                         <i data-lucide="search" class="absolute left-3 text-ink/40 h-4 w-4"></i>
@@ -267,16 +281,7 @@
                     
                     <!-- Atrium (Community) Panel -->
                     <div id="atrium-panel" class="hidden space-y-4">
-                        <div class="bg-[#FCFBF9] border border-beige rounded-xl p-4">
-                            <label class="block text-xs uppercase tracking-wider font-semibold text-ink/70 mb-1.5">Post to the Atrium</label>
-                            <textarea id="atrium-input" rows="3" class="w-full bg-ivory border border-beige rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-forest text-ink resize-none custom-scrollbar" placeholder="Share a brief thought, quote, or poem with the sanctuary..."></textarea>
-                            <div class="flex justify-between items-center mt-2">
-                                <span id="atrium-char-count" class="text-[10px] text-ink/40">0 / 200</span>
-                                <button id="btn-post-atrium" class="bg-forest text-ivory px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-forest/90 transition-all shadow-sm flex items-center gap-1">
-                                    <i data-lucide="send" class="h-3 w-3"></i> Post
-                                </button>
-                            </div>
-                        </div>
+                        <!-- FIXED: Restored the missing atrium-list container -->
                         <div id="atrium-list" class="space-y-4"></div>
                     </div>
 
@@ -327,7 +332,6 @@
                     </div>
                 </div>
 
-                <!-- Profile View -->
                 <div id="right-col-profile" class="hidden flex-col h-full overflow-hidden bg-[#F8F6F2] relative">
                     <div class="bg-ivory border-b border-beige px-6 py-4 flex items-center justify-between flex-shrink-0 select-none relative z-10">
                         <div class="flex items-center space-x-3">
@@ -427,7 +431,6 @@
                     </div>
                 </div>
 
-                <!-- Active Letter Board -->
                 <div id="active-letter-board" class="hidden flex-col h-full overflow-hidden bg-ivory">
                     <div class="bg-ivory border-b border-beige px-6 py-4 flex items-center justify-between flex-shrink-0 select-none">
                         <div class="flex items-center space-x-3">
@@ -451,7 +454,6 @@
                     </div>
                 </div>
 
-                <!-- Friend Profile View -->
                 <div id="right-col-friend-profile" class="hidden flex-col h-full overflow-hidden bg-[#F8F6F2]">
                     <div class="bg-ivory border-b border-beige px-6 py-4 flex items-center justify-between flex-shrink-0 select-none">
                         <div class="flex items-center space-x-3">
@@ -490,7 +492,6 @@
             </section>
         </main>
 
-        <!-- Bottom Navigation -->
         <nav id="bottom-nav" class="absolute bottom-0 left-0 right-0 bg-forest border-t border-gold/20 flex justify-around py-2 z-40 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
             <button id="bottom-inbox" class="flex flex-col items-center text-ivory text-[10px] font-semibold p-2 border-t-2 border-gold transition-colors">
                 <i data-lucide="inbox" class="h-5 w-5 mb-1"></i> Inbox
@@ -530,7 +531,7 @@
             </div>
         </header>
 
-        <button id="btn-exit-zen" class="zen-exit-btn hidden fixed top-6 right-6 z-50 text-ink/60 hover:text-ink bg-ivory/80 backdrop-blur px3 py-2 rounded-lg text-xs font-semibold border border-beige flex items-center gap-1">
+        <button id="btn-exit-zen" class="zen-exit-btn hidden fixed top-6 right-6 z-50 text-ink/60 hover:text-ink bg-ivory/80 backdrop-blur px-3 py-2 rounded-lg text-xs font-semibold border border-beige flex items-center gap-1">
             <i data-lucide="eye" class="h-3.5 w-3.5"></i> Exit Zen
         </button>
 
@@ -621,7 +622,6 @@
         </main>
     </div>
 
-    <!-- More Options Dropdown -->
     <div id="more-dropdown-modal" class="hidden fixed inset-0 z-30" aria-haspopup="true">
         <div class="absolute inset-0 bg-transparent"></div>
         <div class="absolute right-6 top-16 w-48 bg-ivory border border-beige rounded-xl shadow-xl py-2 z-40">
@@ -630,7 +630,6 @@
         </div>
     </div>
 
-    <!-- Tactile Interactive Physical Envelope Modal -->
     <div id="envelope-modal" class="hidden fixed inset-0 bg-[#2C231E]/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <button id="btn-close-envelope-modal" class="hidden absolute top-6 right-6 text-ivory/60 hover:text-ivory bg-forest p-2 rounded-full border border-beige/20 shadow-lg transition-all z-[60]"><i data-lucide="x" class="h-5 w-5"></i></button>
         <div id="envelope-container" class="relative w-full max-w-lg h-[400px] flex items-center justify-center select-none" style="perspective: 1200px;">
@@ -668,7 +667,6 @@
         </div>
     </div>
 
-    <!-- APPLICATION CORE DRIVER -->
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
@@ -679,6 +677,7 @@
         let currentUser = null;
         let activeDraftId = null;
         let currentFolder = 'delivered';
+        let currentViewMode = 'inbox';
         let debounceTimer = null;
         let activeStyling = { inkColor: '#3A2F28', paperStyle: 'linen', fontFamily: 'serif' };
         let activeLetterOnDesk = null; 
@@ -710,9 +709,6 @@
 
         lucide.createIcons();
 
-        // ==========================================
-        // GLOBAL UI UTILITIES
-        // ==========================================
         function showAppConfirm(title, message) {
             return new Promise((resolve) => {
                 const modal = document.getElementById('app-confirm-modal');
@@ -749,7 +745,6 @@
             const hours = Math.floor((total % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const mins = Math.floor((total % (1000 * 60 * 60)) / (1000 * 60));
             const secs = Math.floor((total % (1000 * 60)) / 1000);
-            
             let str = 'Arrives in ';
             if (days > 0) str += `${days}d `;
             if (hours > 0 || days > 0) str += `${hours}h `;
@@ -763,17 +758,10 @@
             let text = rawContent;
             let url = null;
             let ephemeral = false;
-
             const ephMatch = text.match(/^\[EPHEMERAL\]\n?/);
-            if (ephMatch) {
-                ephemeral = true;
-                text = text.replace(ephMatch[0], '');
-            }
+            if (ephMatch) { ephemeral = true; text = text.replace(ephMatch[0], ''); }
             const pcMatch = text.match(/^\[POSTCARD:(.*?)\]\n?/);
-            if (pcMatch && pcMatch[1]) {
-                url = pcMatch[1];
-                text = text.replace(pcMatch[0], '');
-            }
+            if (pcMatch && pcMatch[1]) { url = pcMatch[1]; text = text.replace(pcMatch[0], ''); }
             return { url, text, ephemeral };
         }
 
@@ -791,9 +779,6 @@
             });
         }
 
-        // ==========================================
-        // AMBIENCE & SOUNDSCAPE ENGINE
-        // ==========================================
         let audioCtx = null;
         let ambienceSource = null;
         let ambienceGain = null;
@@ -834,9 +819,6 @@
 
         function stopAmbience() { if (ambienceSource) { try { ambienceSource.stop(); } catch(e){} ambienceSource = null; } }
 
-        // ==========================================
-        // ROUTER & AUTH
-        // ==========================================
         function routeTo(viewId) {
             const authView = document.getElementById('view-auth');
             const dashboardView = document.getElementById('view-dashboard');
@@ -949,10 +931,8 @@
             catch (err) { showAuthStatus(err.message, 'error'); }
         });
 
-        // ==========================================
-        // DASHBOARD & LIST ENGINE
-        // ==========================================
         document.getElementById('nav-search-btn').addEventListener('click', () => {
+            if (currentViewMode !== 'inbox') return;
             const searchBar = document.getElementById('filter-search-container');
             searchBar.classList.toggle('hidden');
             if (!searchBar.classList.contains('hidden')) document.getElementById('filter-search-input').focus();
@@ -965,7 +945,6 @@
         document.getElementById('btn-dropdown-logout').addEventListener('click', async () => { document.getElementById('more-dropdown-modal').classList.add('hidden'); await logoutSession(); });
         window.addEventListener('click', () => { document.getElementById('more-dropdown-modal').classList.add('hidden'); });
 
-        // Bottom Navigation Logic
         document.getElementById('bottom-inbox').addEventListener('click', () => {
             switchToCompanionsMode('inbox');
             const deliveredBtn = document.querySelector('[data-folder="delivered"]');
@@ -995,26 +974,28 @@
             });
         }
 
-        // Auto-fetch inbox when user refocuses the window/tab
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden && currentUser) {
                 const dash = document.getElementById('view-dashboard');
                 if (dash && !dash.classList.contains('hidden')) {
                     fetchInboxFeed();
                     updateUnreadInboxBadge();
-                    if (!document.getElementById('atrium-panel').classList.contains('hidden')) fetchAtriumPosts();
+                    if (currentViewMode === 'atrium') fetchAtriumPosts();
                 }
             }
         });
 
         function switchToCompanionsMode(targetMode) {
+            currentViewMode = targetMode;
             const folderTabs = document.getElementById('mailbox-folder-tabs');
             const searchBar = document.getElementById('filter-search-container');
             const lettersList = document.getElementById('letters-list');
             const companionsPanel = document.getElementById('friends-panel');
             const settingsPanel = document.getElementById('settings-panel');
             const atriumPanel = document.getElementById('atrium-panel');
-            folderTabs.classList.add('hidden'); searchBar.classList.add('hidden'); lettersList.classList.add('hidden'); companionsPanel.classList.add('hidden'); settingsPanel.classList.add('hidden'); atriumPanel.classList.add('hidden');
+            const atriumComposer = document.getElementById('atrium-composer');
+            
+            folderTabs.classList.add('hidden'); searchBar.classList.add('hidden'); lettersList.classList.add('hidden'); companionsPanel.classList.add('hidden'); settingsPanel.classList.add('hidden'); atriumPanel.classList.add('hidden'); atriumComposer.classList.add('hidden');
             
             if (targetMode === 'friends') {
                 companionsPanel.classList.remove('hidden');
@@ -1028,6 +1009,7 @@
                 toggleDashboardState('list'); showMobileRightPane(false);
             } else if (targetMode === 'atrium') {
                 atriumPanel.classList.remove('hidden');
+                atriumComposer.classList.remove('hidden');
                 document.getElementById('mailbox-title').textContent = 'The Atrium';
                 document.getElementById('letter-count').textContent = 'Public Board';
                 toggleDashboardState('list'); 
@@ -1037,6 +1019,8 @@
             } else {
                 folderTabs.classList.remove('hidden');
                 lettersList.classList.remove('hidden');
+                document.getElementById('mailbox-title').textContent = 'Inbox';
+                fetchInboxFeed();
                 showMobileRightPane(false);
             }
         }
@@ -1089,15 +1073,15 @@
         async function initDashboard() {
             try { await supabase.rpc('process_scheduled_letters'); } catch (err) { console.warn('Silent processing request handled:', err); }
             currentFolder = 'delivered';
+            currentViewMode = 'inbox';
             showViewRightPane('right-col-empty');
             showMobileRightPane(false);
             document.querySelectorAll('.folder-tab-btn').forEach(b => b.classList.remove('border-forest', 'text-forest', 'font-semibold'));
             const inboxTab = document.querySelector('[data-folder="delivered"]');
             if (inboxTab) inboxTab.classList.add('border-forest', 'text-forest', 'font-semibold');
             document.getElementById('mailbox-title').textContent = 'Inbox';
-            switchToCompanionsMode(false);
+            switchToCompanionsMode('inbox');
             updateBottomNavActive('inbox');
-            await fetchInboxFeed();
             updateUnreadInboxBadge();
             setupRealtimeInboxChannel(); 
             
@@ -1118,17 +1102,17 @@
                     if (letter.status === 'delivered') {
                         triggerToastNotification(`A new envelope has been delivered: "${letter.subject || 'Correspondence'}"`);
                         updateUnreadInboxBadge();
-                        if (currentFolder === 'delivered') fetchInboxFeed();
+                        fetchInboxFeed();
                     } else if (letter.status === 'scheduled') {
                         triggerToastNotification(`A letter is en route. It will arrive in ${getTimeRemaining(letter.delivery_at)}.`);
-                        if (currentFolder === 'delivered') fetchInboxFeed();
+                        fetchInboxFeed();
                     }
                 })
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'letters', filter: `recipient_id=eq.${currentUser.id}` }, (payload) => {
                     if (payload.new.status === 'delivered' && payload.old.status === 'scheduled') {
                         triggerToastNotification(`A scheduled envelope has arrived: "${payload.new.subject || 'Correspondence'}"`);
                         updateUnreadInboxBadge();
-                        if (currentFolder === 'delivered') fetchInboxFeed();
+                        fetchInboxFeed();
                     }
                 })
                 .subscribe();
@@ -1159,12 +1143,6 @@
         }
 
         async function fetchInboxFeed() {
-            toggleDashboardState('loader');
-            const list = document.getElementById('letters-list');
-            if (!list) return;
-            list.innerHTML = '';
-            if (countdownInterval) clearInterval(countdownInterval);
-            
             let query = supabase.from('letters').select('*, sender:profiles!letters_sender_id_fkey(display_name, username, avatar_url), recipient:profiles!letters_recipient_id_fkey(display_name, avatar_url)');
             
             if (currentFolder === 'delivered') {
@@ -1178,9 +1156,22 @@
             }
 
             const { data: letters, error } = await query.order('created_at', { ascending: false });
-            if (error || !letters || letters.length === 0) { toggleDashboardState('empty'); document.getElementById('letter-count').textContent = '0 Letters'; return; }
+            
+            if (error || !letters || letters.length === 0) {
+                if (currentViewMode === 'inbox') toggleDashboardState('empty');
+                document.getElementById('letter-count').textContent = '0 Letters';
+                return;
+            }
+            
             document.getElementById('letter-count').textContent = `${letters.length} Letter${letters.length === 1 ? '' : 's'}`;
+            
+            if (currentViewMode !== 'inbox') return;
+
             toggleDashboardState('list');
+            const list = document.getElementById('letters-list');
+            if (!list) return;
+            list.innerHTML = '';
+            if (countdownInterval) clearInterval(countdownInterval);
 
             letters.forEach(letter => {
                 const card = document.createElement('div');
@@ -1192,11 +1183,8 @@
                 const isUnread = currentFolder === 'delivered' && letter.status === 'delivered';
                 
                 let dot = '';
-                if (isUnread) {
-                    dot = `<span class="h-2 w-2 rounded-full bg-gold mr-3 inline-block flex-shrink-0"></span>`;
-                } else if (isScheduledTransit) {
-                    dot = `<i data-lucide="clock" class="h-4 w-4 text-gold mr-3 flex-shrink-0"></i>`;
-                }
+                if (isUnread) dot = `<span class="h-2 w-2 rounded-full bg-gold mr-3 inline-block flex-shrink-0"></span>`;
+                else if (isScheduledTransit) dot = `<i data-lucide="clock" class="h-4 w-4 text-gold mr-3 flex-shrink-0"></i>`;
 
                 let profile, displayName;
                 if (currentFolder === 'delivered') {
@@ -1226,9 +1214,7 @@
                 const nameLabel = currentFolder === 'delivered' ? `From: ${displayName}` : `To: ${displayName}`;
                 card.innerHTML = `<div class="flex items-center overflow-hidden min-w-0 mr-2">${avatarHtml}${dot}<div class="min-w-0"><h4 class="font-serif text-base font-semibold text-forest group-hover:text-gold transition-colors truncate">${letter.subject || '(Untitled Scroll)'}</h4><p class="text-[11px] text-ink/50 mt-0.5 truncate">${nameLabel}</p></div></div><div class="text-right flex-shrink-0">${metaContent}</div>`;
                 
-                if (isScheduledTransit && currentFolder === 'delivered') {
-                    card.classList.add('opacity-70', 'border-dashed', 'border-gold');
-                }
+                if (isScheduledTransit && currentFolder === 'delivered') card.classList.add('opacity-70', 'border-dashed', 'border-gold');
                 
                 card.addEventListener('click', () => {
                     if (currentFolder === 'delivered' && letter.status === 'scheduled') {
@@ -1243,17 +1229,15 @@
             
             if (document.querySelector('.countdown-meta')) {
                 countdownInterval = setInterval(() => { 
-                    document.querySelectorAll('.countdown-meta').forEach(el => { 
-                        el.textContent = getTimeRemaining(el.dataset.delivery); 
-                    }); 
+                    document.querySelectorAll('.countdown-meta').forEach(el => { el.textContent = getTimeRemaining(el.dataset.delivery); }); 
                 }, 1000);
             }
-            
             const cards = list.querySelectorAll('.letter-card');
             gsap.fromTo(cards, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.05, ease: 'power2.out' });
         }
 
         function toggleDashboardState(state) {
+            if (currentViewMode !== 'inbox') return;
             const list = document.getElementById('letters-list');
             const loader = document.getElementById('dashboard-loader');
             const empty = document.getElementById('dashboard-empty');
@@ -1277,16 +1261,12 @@
             const rightCol = document.getElementById('dashboard-right-col');
             const bottomNav = document.getElementById('bottom-nav');
             if (show) { 
-                leftCol.classList.add('hidden'); 
-                leftCol.classList.remove('md:flex'); 
-                rightCol.classList.remove('hidden'); 
-                rightCol.classList.add('flex'); 
+                leftCol.classList.add('hidden'); leftCol.classList.remove('md:flex'); 
+                rightCol.classList.remove('hidden'); rightCol.classList.add('flex'); 
                 if (window.innerWidth < 768 && bottomNav) bottomNav.style.display = 'none'; 
             } else { 
-                leftCol.classList.remove('hidden'); 
-                leftCol.classList.add('md:flex'); 
-                rightCol.classList.add('hidden'); 
-                rightCol.classList.remove('flex'); 
+                leftCol.classList.remove('hidden'); leftCol.classList.add('md:flex'); 
+                rightCol.classList.add('hidden'); rightCol.classList.remove('flex'); 
                 if (bottomNav) bottomNav.style.display = 'flex'; 
             }
         }
@@ -1310,13 +1290,17 @@
                 return;
             }
             if (posts.length === 0) {
-                list.innerHTML = `<p class="text-xs italic text-ink/40 text-center py-4">The atrium is quiet. Be the first to share a thought.</p>`;
+                list.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-10 text-center space-y-3">
+                        <i data-lucide="globe" class="h-8 w-8 text-gold"></i>
+                        <p class="font-serif italic text-sm text-ink/60">The atrium is quiet. Be the first to share a thought.</p>
+                    </div>
+                `;
+                lucide.createIcons();
                 return;
             }
 
             const postIds = posts.map(p => p.id);
-            
-            // Fetch likes, replies, and profiles separately to avoid relationship join issues
             const [
                 { data: likes }, 
                 { data: replies }, 
@@ -1327,7 +1311,6 @@
                 supabase.from('profiles').select('id, display_name, avatar_url').in('id', [...new Set(posts.map(p => p.user_id))])
             ]);
 
-            // Fetch profiles for replies
             const replyUserIds = [...new Set((replies || []).map(r => r.user_id))];
             const { data: replyProfiles } = await supabase.from('profiles').select('id, display_name').in('id', replyUserIds);
 
@@ -1357,13 +1340,17 @@
                 const repliesHtml = postReplies.map(r => {
                     const rProfile = profileMap[r.user_id] || {};
                     const rDisplayName = rProfile.display_name || 'Anonymous';
+                    const rDateStr = new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                     return `
-                    <div class="flex items-start space-x-2 mt-2 pt-2 border-t border-linen">
+                    <div class="flex items-start space-x-2 mt-2">
                         <div class="h-6 w-6 rounded-full bg-beige flex-shrink-0 flex items-center justify-center font-bold text-forest text-[10px] overflow-hidden border border-beige">
                             ${rProfile.avatar_url ? `<img src="${rProfile.avatar_url}" class="h-full w-full object-cover">` : rDisplayName.charAt(0).toUpperCase()}
                         </div>
-                        <div class="flex-1 bg-beige/40 rounded-lg p-2">
-                            <span class="text-[10px] font-semibold text-forest">${rDisplayName}</span>
+                        <div class="flex-1 bg-beige/30 rounded-lg p-2">
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-[11px] font-semibold text-forest">${rDisplayName}</span>
+                                <span class="text-[9px] text-ink/40">${rDateStr}</span>
+                            </div>
                             <p class="text-xs text-ink/80 mt-0.5 whitespace-pre-wrap">${r.content}</p>
                         </div>
                     </div>`;
@@ -1382,34 +1369,38 @@
                 const item = document.createElement('div');
                 item.className = `bg-ivory border border-beige rounded-xl p-4 shadow-sm transition-all hover:shadow-md`;
                 item.innerHTML = `
-                    <div class="flex items-start space-x-3 mb-2">
+                    <div class="flex items-start space-x-3">
                         <div class="h-10 w-10 rounded-full bg-beige flex-shrink-0 flex items-center justify-center font-bold text-forest text-sm overflow-hidden border border-beige">
                             ${avatarUrl ? `<img src="${avatarUrl}" class="h-full w-full object-cover">` : displayName.charAt(0).toUpperCase()}
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-baseline gap-2">
-                                <h4 class="text-sm font-semibold text-forest truncate">${displayName}</h4>
-                                <span class="text-[10px] text-ink/40">${dateStr}</span>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-baseline gap-2">
+                                    <h4 class="text-sm font-semibold text-forest truncate">${displayName}</h4>
+                                    <span class="text-[10px] text-ink/40">${dateStr}</span>
+                                </div>
                                 ${actionButtons}
                             </div>
                             <p class="post-content text-sm font-serif text-ink leading-relaxed mt-1 whitespace-pre-wrap" data-post-id="${post.id}">${post.content}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4 mt-2 pl-13">
-                        <button class="like-btn flex items-center gap-1 text-xs ${isLiked ? 'text-red-500' : 'text-ink/50'} hover:text-red-500 transition-colors" data-post-id="${post.id}">
-                            <i data-lucide="heart" class="h-4 w-4 ${isLiked ? 'fill-current' : ''}"></i>
-                            <span>${postLikes.length}</span>
-                        </button>
-                        <button class="reply-btn flex items-center gap-1 text-xs text-ink/50 hover:text-forest transition-colors" data-post-id="${post.id}">
-                            <i data-lucide="message-circle" class="h-4 w-4"></i>
-                            <span>${postReplies.length}</span>
-                        </button>
-                    </div>
-                    <div class="replies-container mt-2 pl-13 hidden" data-post-id="${post.id}">
-                        ${repliesHtml}
-                        <div class="flex items-center space-x-2 mt-2">
-                            <input type="text" class="reply-input flex-grow bg-[#FCFBF9] border border-beige rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-forest text-ink" placeholder="Write a reply..." data-post-id="${post.id}">
-                            <button class="btn-submit-reply bg-forest text-ivory px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-forest/90 transition-colors" data-post-id="${post.id}">Reply</button>
+                            
+                            <div class="flex items-center gap-6 mt-3 text-ink/50">
+                                <button class="like-btn flex items-center gap-1.5 text-xs hover:text-red-500 transition-colors" data-post-id="${post.id}">
+                                    <i data-lucide="heart" class="h-4 w-4 ${isLiked ? 'fill-current text-red-500' : ''}"></i>
+                                    <span>${postLikes.length}</span>
+                                </button>
+                                <button class="reply-btn flex items-center gap-1.5 text-xs hover:text-forest transition-colors" data-post-id="${post.id}">
+                                    <i data-lucide="message-circle" class="h-4 w-4"></i>
+                                    <span>${postReplies.length}</span>
+                                </button>
+                            </div>
+                            
+                            <div class="replies-container mt-3 pt-3 border-t border-linen hidden" data-post-id="${post.id}">
+                                ${repliesHtml}
+                                <div class="flex items-center space-x-2 mt-3">
+                                    <input type="text" class="reply-input flex-grow bg-[#FCFBF9] border border-beige rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-forest text-ink" placeholder="Write a reply..." data-post-id="${post.id}">
+                                    <button class="btn-submit-reply bg-forest text-ivory px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-forest/90 transition-colors" data-post-id="${post.id}">Reply</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1437,11 +1428,10 @@
 
             lucide.createIcons();
 
-            // Event Listeners
             list.querySelectorAll('.like-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const postId = e.currentTarget.dataset.postId;
-                    const isCurrentlyLiked = e.currentTarget.classList.contains('text-red-500');
+                    const isCurrentlyLiked = e.currentTarget.querySelector('i').classList.contains('fill-current');
                     if (isCurrentlyLiked) {
                         await supabase.from('community_likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
                     } else {
@@ -1457,9 +1447,7 @@
                     const container = list.querySelector(`.replies-container[data-post-id="${postId}"]`);
                     if (container) {
                         container.classList.toggle('hidden');
-                        if (!container.classList.contains('hidden')) {
-                            container.querySelector('.reply-input').focus();
-                        }
+                        if (!container.classList.contains('hidden')) container.querySelector('.reply-input').focus();
                     }
                 });
             });
@@ -1476,23 +1464,18 @@
                 });
             });
 
-            // Edit Post Listeners
             list.querySelectorAll('.edit-post-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const postId = e.currentTarget.dataset.postId;
                     const pEl = list.querySelector(`.post-content[data-post-id="${postId}"]`);
                     if (pEl) {
                         if (pEl.contentEditable === 'true') {
-                            // Save
                             pEl.contentEditable = 'false';
                             pEl.classList.remove('bg-beige/40', 'p-2', 'rounded');
                             const newText = pEl.innerText.trim();
-                            if (newText) {
-                                await supabase.from('community_posts').update({ content: newText }).eq('id', postId);
-                            }
+                            if (newText) await supabase.from('community_posts').update({ content: newText }).eq('id', postId);
                             fetchAtriumPosts();
                         } else {
-                            // Edit
                             pEl.contentEditable = 'true';
                             pEl.classList.add('bg-beige/40', 'p-2', 'rounded');
                             pEl.focus();
@@ -1503,7 +1486,6 @@
                 });
             });
 
-            // Delete Post Listeners
             list.querySelectorAll('.delete-post-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const postId = e.currentTarget.dataset.postId;
@@ -1519,24 +1501,16 @@
         document.getElementById('atrium-input').addEventListener('input', (e) => {
             const len = e.target.value.length;
             document.getElementById('atrium-char-count').textContent = `${len} / 200`;
-            if (len > 200) {
-                e.target.value = e.target.value.substring(0, 200);
-            }
+            if (len > 200) e.target.value = e.target.value.substring(0, 200);
         });
 
         document.getElementById('btn-post-atrium').addEventListener('click', async () => {
             const input = document.getElementById('atrium-input');
             const text = input.value.trim();
             if (!text) return;
-            
             const btn = document.getElementById('btn-post-atrium');
             setButtonLoading(btn, true, 'Posting...');
-            
-            const { error } = await supabase.from('community_posts').insert({
-                user_id: currentUser.id,
-                content: text
-            });
-            
+            const { error } = await supabase.from('community_posts').insert({ user_id: currentUser.id, content: text });
             setButtonLoading(btn, false);
             if (!error) {
                 input.value = '';
@@ -1552,7 +1526,6 @@
         // ==========================================
         async function initCompanionsEngine() {
             const { data: friends } = await supabase.from('user_friends').select('*');
-            
             const { data: letters } = await supabase.from('letters')
                 .select('*, sender:profiles!letters_sender_id_fkey(display_name), recipient:profiles!letters_recipient_id_fkey(display_name)')
                 .or(`sender_id.eq.${currentUser.id},recipient_id.eq.${currentUser.id}`)
@@ -1577,7 +1550,6 @@
                     const friendLetters = lettersByFriend[friend.friend_id] || [];
                     const item = document.createElement('div');
                     item.className = "friend-group";
-                    
                     let lettersHtml = '';
                     if (friendLetters.length > 0) {
                         lettersHtml = '<div class="mt-2 space-y-2 pl-2 border-l-2 border-beige">';
@@ -1628,14 +1600,12 @@
                         const confirmed = await showAppConfirm('Remove Companion', 'Are you sure you want to remove this companion connection?');
                         if (confirmed) { await supabase.from('friendships').delete().eq('id', friendshipId); await initCompanionsEngine(); }
                     });
-
                     item.querySelectorAll('[data-letter-id]').forEach(el => {
                         el.addEventListener('click', () => {
                             const letter = friendLetters.find(l => l.id === el.dataset.letterId);
                             if (letter) openLetterDetails(letter);
                         });
                     });
-
                     list.appendChild(item);
                 });
             }
@@ -1685,7 +1655,7 @@
         });
 
         // ==========================================
-        // COMPOSER MODULE, ZEN MODE & CHRONOTHERAPY
+        // COMPOSER MODULE
         // ==========================================
         document.getElementById('btn-close-composer').addEventListener('click', () => routeTo('view-dashboard'));
 
@@ -1705,26 +1675,18 @@
             document.getElementById('btn-ambience-fire').classList.add('bg-beige/40', 'text-forest', 'font-semibold');
         });
 
-        document.getElementById('letter-body').addEventListener('input', () => {
-            initAudioCtx(); clearTimeout(penScratchTimeout); playPenScratch();
-        });
-
+        document.getElementById('letter-body').addEventListener('input', () => { initAudioCtx(); clearTimeout(penScratchTimeout); playPenScratch(); });
         document.getElementById('btn-toggle-zen').addEventListener('click', () => document.body.classList.add('zen-mode-active'));
         document.getElementById('btn-exit-zen').addEventListener('click', () => document.body.classList.remove('zen-mode-active'));
 
         function applyChronotherapy() {
             const hour = new Date().getHours();
             const canvas = document.getElementById('paper-canvas');
-            let bg, textInput;
-            if (hour >= 5 && hour < 12) { 
-                bg = 'linear-gradient(to bottom, #FFFDF8, #FFFCF4)'; textInput = '#3A2F28'; 
-            } else if (hour >= 12 && hour < 18) { 
-                bg = '#FFFDF8'; textInput = '#3A2F28'; 
-            } else if (hour >= 18 && hour < 21) { 
-                bg = 'linear-gradient(to bottom, #FFFDF8, #F5EFE6)'; textInput = '#3A2F28'; 
-            } else { 
-                bg = 'linear-gradient(to bottom, #FFFDF8, #E6D8C3)'; textInput = '#3A2F28'; 
-            }
+            let bg, textInput = '#3A2F28';
+            if (hour >= 5 && hour < 12) bg = 'linear-gradient(to bottom, #FFFDF8, #FFFCF4)'; 
+            else if (hour >= 12 && hour < 18) bg = '#FFFDF8'; 
+            else if (hour >= 18 && hour < 21) bg = 'linear-gradient(to bottom, #FFFDF8, #F5EFE6)'; 
+            else bg = 'linear-gradient(to bottom, #FFFDF8, #E6D8C3)'; 
             canvas.style.backgroundImage = bg;
             document.getElementById('letter-body').style.color = textInput;
             document.getElementById('letter-subject').style.color = textInput;
@@ -1827,7 +1789,6 @@
             let contentToSave = document.getElementById('letter-body').value;
             if (document.getElementById('ephemeral-toggle').checked) contentToSave = `[EPHEMERAL]\n${contentToSave}`;
             if (pendingPostcardUrl) contentToSave = `[POSTCARD:${pendingPostcardUrl}]\n${contentToSave}`;
-            
             const payload = {
                 sender_id: currentUser.id,
                 recipient_id: document.getElementById('recipient-id').value || null,
@@ -1958,10 +1919,7 @@
                 
                 if (ephemeral) {
                     const proceed = await showAppConfirm('Fragile Letter', 'This letter is fragile. It will permanently burn away when you close it. Do you wish to unfold it?');
-                    if (!proceed) { 
-                        showViewRightPane('right-col-empty'); 
-                        return; 
-                    }
+                    if (!proceed) { showViewRightPane('right-col-empty'); return; }
                 }
 
                 document.getElementById('env-letter-title').textContent = letter.subject || '(Untitled Scroll)';
@@ -2110,11 +2068,8 @@
                 activeWaxColor = meta.wax_color || '#801818';
                 activeMonogram = meta.monogram || (profile.display_name ? profile.display_name.charAt(0).toUpperCase() : 'D');
                 
-                if (meta.background_url) {
-                    document.getElementById('profile-bg-layer').style.backgroundImage = `url(${meta.background_url})`;
-                } else {
-                    document.getElementById('profile-bg-layer').style.backgroundImage = 'none';
-                }
+                if (meta.background_url) document.getElementById('profile-bg-layer').style.backgroundImage = `url(${meta.background_url})`;
+                else document.getElementById('profile-bg-layer').style.backgroundImage = 'none';
 
                 document.querySelectorAll('#wax-color-palette button').forEach(b => b.classList.replace('border-forest', 'border-transparent'));
                 document.querySelector(`#wax-color-palette button[data-wax="${activeWaxColor}"]`)?.classList.replace('border-transparent', 'border-forest');
@@ -2283,4 +2238,4 @@
         initAppSession();
     </script>
 </body>
-    </html>
+                    </html>
